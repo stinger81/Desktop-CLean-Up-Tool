@@ -33,11 +33,14 @@ path = "\\Users\\user\\Desktop" # path to the folder to be cleaned up
 
 cleanUpPath = os.path.join(path, cleanUpDirName) # path to the folder to store the cleaned up files
 
+forceIgnore = ["desktop.ini", "Thumbs.db"] # do not remove files can damage the OS
+
+
 def updateDirOS(inPath:str):
     """
     Update file dir to currnet os
     :param: inPath
-    :return: outpath: updated path
+    :return: outPath: updated path
     """
     if inPath[0] == "\\":
         outPath = os.path.join(os.sep,*inPath.split("\\")) 
@@ -69,6 +72,7 @@ def buildTree(path,level = 0):
         else:
             tree += "\t"*level + file+"\n"
     return tree
+
 def updateTree(path):
     """
     Update the tree of the files in the directory
@@ -80,6 +84,33 @@ def updateTree(path):
         f.write("Tree:\n")
         f.write(buildTree(path))
         f.close()
+
+def ignoreList():
+    """
+    Build ignore list
+    :param: path: None
+    :return: list: exceptions
+    """
+    exceptions = [cleanUpDirName] # list of exceptions
+    ignoreExtentions = []
+    # build list of exceptions
+    for i in forceIgnore:
+        exceptions.append(i)
+    with open(exceptionFile, "r") as f:
+        for line in f:
+            if line[0] == "#":
+                continue
+            elif line.strip()[-1] == "/":
+                exceptions.append(line.strip()[:-1])
+            elif line[0] == "*":
+                ignoreExtentions.append(line.strip()[1:])
+            else:
+                exceptions.append(line.strip())
+    print("Ignore File(s)/Directory(s): " + str(exceptions))
+    print("Ignore Extenstion(s): "+str(ignoreExtentions))
+    return exceptions, ignoreExtentions
+
+
 if __name__ == "__main__":
     # updates paths from \\ to proper divider for OS
     exceptionFile = updateDirOS(exceptionFile)
@@ -93,18 +124,8 @@ if __name__ == "__main__":
         path = updateToWSL(path)
         cleanUpPath = updateToWSL(cleanUpPath)
 
-    # files to force ignore
-    forceIgnore = ["desktop.ini", "Thumbs.db"] # do not remove files can damage the OS
-    exceptions = [cleanUpDirName] # list of exceptions
-    # build list of exceptions
-    for i in forceIgnore:
-        exceptions.append(i)
-    with open(exceptionFile, "r") as f:
-        for line in f:
-            if line[0] == "#":
-                continue
-            exceptions.append(line.strip())
-    print("Exceptions: " + str(exceptions))
+    
+    exceptions,ignoreExtenstions  = ignoreList()
 
     # Check that there are files to clean up
     lenPath = len(os.listdir(path))
@@ -130,7 +151,6 @@ if __name__ == "__main__":
         print("date folder already exists")
         print("updating tree")
         updateTree(dateFolder)
-        print("wait 1 second than rerun")
         exit()
 
     files = os.listdir(path)
@@ -139,13 +159,15 @@ if __name__ == "__main__":
     for i in range(len(os.listdir(path))):
         if files[i] in exceptions:
             print("skipping " + files[i]+" in exception list")
-            continue
-        if os.path.isdir(os.path.join(path,files[i])):
+        elif os.path.isdir(os.path.join(path,files[i])):
             shutil.move(os.path.join(path,files[i]), os.path.join(dateFolder,files[i]))
             print("Dir Moved: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
         else:
-            os.rename(os.path.join(path, files[i]), os.path.join(dateFolder, files[i]))
-            print("Files Moved: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
+            if os.path.splitext(files[i])[1] in ignoreExtenstions:
+                print("skipping " + files[i]+" file type in exception list")
+            else:
+                os.rename(os.path.join(path, files[i]), os.path.join(dateFolder, files[i]))
+                print("Files Moved: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
 
     # build list of file in cleanUpPath
     updateTree(cleanUpPath)
@@ -154,5 +176,3 @@ else:
     print("not main file ")
     print("to use full functions please run this file")
     print("__file__: " + __file__)
-
-

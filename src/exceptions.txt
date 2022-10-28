@@ -23,4 +23,6 @@
 # List of files to ignore
 # the # can be used to comment out an exception file
 test1.txt
+*.pdf
+test/
 # test2.txt

@@ -21,8 +21,17 @@
 # Desktop CLean Up Tool
 Tool Designed to clean up desktop and store it all in a folder 
 
-Designed and tested on windows and WSL 
+Designed and tested on windows and WSL*
 
-Can be should work on standard linux and MacOS however is not tested
+*WSL mounts back to main C drive
+
+Can be should work on standard linux and MacOS however it is not tested
 
 When entering directory regardless of OS use "\\\\" to separate 
+
+## Ignoring Specific Directories, Files and Extensions
+* The same principle is used as in .gitignore
+* "/" at the end of a line dictates a directory to ignore
+* "*" at the beginning of a line will dictate a file extension to ignore
+* "insertFileNameHere.FileExtension" will ignore a specific file
+* "#" will suppress a line and it will not be read by the program
