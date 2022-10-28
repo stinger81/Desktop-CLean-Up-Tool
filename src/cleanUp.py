@@ -80,8 +80,8 @@ def updateTree(path):
     :return: None
     """
     with open(os.path.join(path, "tree.txt"), "w") as f:
-        f.write("Updated: "+time.strftime("%Y-%m-%d %H:%M:%S")+"\n")
-        f.write("Tree:\n")
+        f.write("UPDATED: "+time.strftime("%Y-%m-%d %H:%M:%S")+"\n")
+        f.write("TREE:\n")
         f.write(buildTree(path))
         f.close()
 
@@ -92,7 +92,7 @@ def ignoreList():
     :return: list: exceptions
     """
     exceptions = [cleanUpDirName] # list of exceptions
-    ignoreExtentions = []
+    ignoreExtensions = []
     # build list of exceptions
     for i in forceIgnore:
         exceptions.append(i)
@@ -103,12 +103,12 @@ def ignoreList():
             elif line.strip()[-1] == "/":
                 exceptions.append(line.strip()[:-1])
             elif line[0] == "*":
-                ignoreExtentions.append(line.strip()[1:])
+                ignoreExtensions.append(line.strip()[1:])
             else:
                 exceptions.append(line.strip())
     print("Ignore File(s)/Directory(s): " + str(exceptions))
-    print("Ignore Extenstion(s): "+str(ignoreExtentions))
-    return exceptions, ignoreExtentions
+    print("Ignore Extension(s): "+str(ignoreExtensions))
+    return exceptions, ignoreExtensions
 
 
 if __name__ == "__main__":
@@ -119,13 +119,13 @@ if __name__ == "__main__":
 
     # WSL support
     if 'microsoft-standard' in uname().release:
-        print("WSL detected")
+        print("WSL Detected - Switching to mnt//c//")
         exceptionFile = updateToWSL(exceptionFile)
         path = updateToWSL(path)
         cleanUpPath = updateToWSL(cleanUpPath)
 
     
-    exceptions,ignoreExtenstions  = ignoreList()
+    exceptions,ignoreExtensions  = ignoreList()
 
     # Check that there are files to clean up
     lenPath = len(os.listdir(path))
@@ -134,23 +134,24 @@ if __name__ == "__main__":
             lenPath -= 1
     if lenPath != 0:
         if not os.path.isdir(cleanUpPath):
-            print("creating clean up path")
+            print("MKDIR: Making Directory for Clean Up")
             os.makedirs(cleanUpPath)
     else:
-        print("no files to clean up")
-        print("updating tree")
-        updateTree(cleanUpPath)
-        exit()
+        print("INFO: Zero(0) Files Detected to Clean Up")
+        print("EXITING WITH CODE 0") # Normal Safe Exit
+        exit() # End Program
 
     # add a date based folder to clean into
     dateFolder = os.path.join(cleanUpPath, time.strftime("%Y_%m_%d_%H_%M_%S"))
     if not os.path.isdir(dateFolder):
-        print("creating date folder")
+        print("MKDIR: Making Directory for Session")
         os.makedirs(dateFolder)
     else:
-        print("date folder already exists")
-        print("updating tree")
+        print("MKDIR ERROR: Directory Already Exist")
+        print("INFO: Updating Tree")
         updateTree(dateFolder)
+        print("INFO: Tree update complete")
+        print("EXITING WITH CODE 0") # Normal Safe Exit
         exit()
 
     files = os.listdir(path)
@@ -158,21 +159,21 @@ if __name__ == "__main__":
     # loop to move files
     for i in range(len(os.listdir(path))):
         if files[i] in exceptions:
-            print("skipping " + files[i]+" in exception list")
+            print("SKIPPING: " + files[i]+" in exception list")
         elif os.path.isdir(os.path.join(path,files[i])):
             shutil.move(os.path.join(path,files[i]), os.path.join(dateFolder,files[i]))
-            print("Dir Moved: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
+            print("DIRECTORY MOVED: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
         else:
-            if os.path.splitext(files[i])[1] in ignoreExtenstions:
-                print("skipping " + files[i]+" file type in exception list")
+            if os.path.splitext(files[i])[1] in ignoreExtensions:
+                print("SKIPPING: " + files[i]+" file type in exception list")
             else:
                 os.rename(os.path.join(path, files[i]), os.path.join(dateFolder, files[i]))
-                print("Files Moved: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
+                print("FILE MOVED: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
 
     # build list of file in cleanUpPath
     updateTree(cleanUpPath)
 
 else:
-    print("not main file ")
-    print("to use full functions please run this file")
+    print("ERROR: Not Main file")
+    print("NOTE: To run automated sequence run;")
     print("__file__: " + __file__)
