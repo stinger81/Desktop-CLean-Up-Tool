@@ -23,7 +23,7 @@ Tool Designed to clean up desktop and store it all in a folder
 
 Designed and tested on windows and WSL*
 
-*WSL mounts back to main C drive
+*WSL mounts back to main C drive. Bash script developed to be ran from WSL or linux.
 
 Can be should work on standard linux and MacOS however it is not tested
 

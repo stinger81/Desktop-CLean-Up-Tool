@@ -57,7 +57,7 @@ def updateToWSL(inpath:str):
     outpath = os.sep+"mnt"+os.sep+"c"+inpath
     return outpath
 
-def buildTree(path,level = 0):
+def buildTree(path,level = 0, prevDir = False):
     """
     Recursive functions to build a tree of the files in the directory
     :param: path: path to the dir to build tree from
@@ -67,10 +67,20 @@ def buildTree(path,level = 0):
     tree = ""
     for file in os.listdir(path):
         if os.path.isdir(os.path.join(path,file)):
-            tree += "\t"*level + file+"\n"
-            tree += buildTree(os.path.join(path,file),level+1)
+            if level == 0:
+                tree += "\t"*(level)+ file+"\n"
+            elif prevDir:
+                tree += "\t"*(level-1)+"|-> "+ file+"\n"
+                prevDir = False
+            else:
+                tree += "\t"*(level)+ file+"\n"
+            tree += buildTree(os.path.join(path,file),level+1, prevDir=True)
         else:
-            tree += "\t"*level + file+"\n"
+            if prevDir:
+                tree += "\t"*(level-1)+"|-> "+ file+"\n"
+                prevDir = False
+            else:
+                tree += "\t"*(level)+ file+"\n"
     return tree
 
 def updateTree(path):
@@ -132,6 +142,8 @@ if __name__ == "__main__":
     for i in os.listdir(path):
         if i in exceptions:
             lenPath -= 1
+        elif os.path.splitext(i)[1] in ignoreExtensions:
+            lenPath -= 1
     if lenPath != 0:
         if not os.path.isdir(cleanUpPath):
             print("MKDIR: Making Directory for Clean Up")
@@ -159,13 +171,13 @@ if __name__ == "__main__":
     # loop to move files
     for i in range(len(os.listdir(path))):
         if files[i] in exceptions:
-            print("SKIPPING: " + files[i]+" in exception list")
+            print("SKIPPING: " + str(i+1) + " of " + str(total)+" Skipped File: "+files[i]+" in exception list")
         elif os.path.isdir(os.path.join(path,files[i])):
             shutil.move(os.path.join(path,files[i]), os.path.join(dateFolder,files[i]))
             print("DIRECTORY MOVED: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
         else:
             if os.path.splitext(files[i])[1] in ignoreExtensions:
-                print("SKIPPING: " + files[i]+" file type in exception list")
+                print("SKIPPING: " + str(i+1) + " of " + str(total)+" Skipped File: "+ files[i]+" file type in exception list")
             else:
                 os.rename(os.path.join(path, files[i]), os.path.join(dateFolder, files[i]))
                 print("FILE MOVED: " + str(i+1) + " of " + str(total)+" Current File: " + files[i])
